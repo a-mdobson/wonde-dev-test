@@ -21,32 +21,30 @@ class ApiCallsController extends Controller
     public function schoolIndex() {
         $employees = $this->client->school(env('UNIQUE_SCHOOL_KEY'))->employees->all(
             ['employment_details'],
-            // ["per_page" => 10]        //No access to meta property 
+            // ["per_page" => 10]        //meta property is private, couldn't find a workaround for the time it would've taken.
         ); 
 
-        
+        /*--Used the below as opposed to using pagination for better usability */
 
-        /*--Below Unused because it conflicted with pagination didn't have the time to work around */
+        $current_employees = [];
+        
+        foreach ($employees as $employee){
+            $employee_details = $employee->employment_details->data; //avoid repetition on line below
 
-        // $current_employees = [];
+            //If current and is a teacher, add to current employees array
+            $employee_details->current && $employee_details->teaching_staff ? array_push( $current_employees, $employee ) : ''; 
+        }
         
-        // foreach ($employees as $employee){
-        //     $employee_details = $employee->employment_details->data; //avoid repetition on line below
-        //     //If current and is a teacher, add to current employees array
-        //     $employee_details->current && $employee_details->teaching_staff ? array_push( $current_employees, $employee ) : ''; 
-        // }
-        
-        /*--Sorting by Surname Asc Alphabetically --Also unused because it conflicted with pagination */
+        $employees_sorted = [];
 
-        // $employees_sorted = [];
-        // foreach ($current_employees as $employee){
-        // $ref = $employee->surname . $employee->forename;
-        //     $employees_sorted[$ref]=$employee;
-        // }
-        // ksort($employees_sorted);
-        // dd($employees_sorted);
+        foreach ($current_employees as $employee){
+        $ref = $employee->forename . $employee->surname;
+            $employees_sorted[$ref]=$employee;
+        }
+
+        ksort($employees_sorted);
         
-        return view('employees', ['employees' => $employees]);
+        return view('employees', ['employees' => $employees_sorted]);
     }
 
     public function classesForEmployee($employeeId){
